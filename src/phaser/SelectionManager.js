@@ -1,6 +1,8 @@
+import Phaser from 'phaser';
 import useEditorStore from '../stores/editorStore';
 
-const HANDLE_SIZE = 8;
+const HANDLE_SIZE = 10;
+const HANDLE_HIT_SIZE = 22;
 const HANDLE_COLOR = 0x89b4fa;
 
 /**
@@ -51,7 +53,16 @@ export default class SelectionManager {
       );
       handle.setOrigin(0.5, 0.5);
       handle.setDepth(10001);
-      handle.setInteractive({ draggable: true, cursor: pos.cursor });
+      handle.setInteractive(
+        new Phaser.Geom.Rectangle(
+          (HANDLE_SIZE - HANDLE_HIT_SIZE) / 2,
+          (HANDLE_SIZE - HANDLE_HIT_SIZE) / 2,
+          HANDLE_HIT_SIZE,
+          HANDLE_HIT_SIZE
+        ),
+        Phaser.Geom.Rectangle.Contains,
+        { draggable: true, cursor: pos.cursor }
+      );
       handle.setData('handleType', pos.type);
       handle.setData('elementId', el.id);
 

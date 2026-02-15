@@ -90,6 +90,70 @@ const useEditorStore = create(subscribeWithSelector((set, get) => ({
   exportOpen: false,
   setExportOpen: (v) => set({ exportOpen: v }),
 
+  // ----- Clipboard (copy / paste) -----
+  clipboard: [],
+
+  copySelection: () => {
+    const { selectedIds, elements } = get();
+    if (selectedIds.length === 0) return;
+    const copied = elements
+      .filter((e) => selectedIds.includes(e.id))
+      .map((e) => ({ ...e }));
+    set({ clipboard: copied });
+  },
+
+  pasteClipboard: () => {
+    const { clipboard, elements } = get();
+    if (clipboard.length === 0) return;
+
+    const OFFSET = 20;
+    const oldToNewId = {};
+    const oldToNewGroup = {};
+    const newElements = [];
+
+    for (const src of clipboard) {
+      const newId = genId();
+      oldToNewId[src.id] = newId;
+
+      let newGroupId = null;
+      if (src.groupId) {
+        if (!oldToNewGroup[src.groupId]) {
+          oldToNewGroup[src.groupId] = genGroupId();
+        }
+        newGroupId = oldToNewGroup[src.groupId];
+      }
+
+      newElements.push({
+        ...src,
+        id: newId,
+        x: src.x + OFFSET,
+        y: src.y + OFFSET,
+        groupId: newGroupId,
+        name: src.name ? `${src.name} copy` : src.name,
+      });
+    }
+
+    // Rebuild groups for pasted elements
+    const { groups } = get();
+    const newGroups = [];
+    for (const [oldGid, newGid] of Object.entries(oldToNewGroup)) {
+      const orig = groups.find((g) => g.id === oldGid);
+      if (orig) {
+        const newChildren = orig.children
+          .filter((cid) => oldToNewId[cid])
+          .map((cid) => oldToNewId[cid]);
+        newGroups.push({ id: newGid, name: `${orig.name} copy`, children: newChildren });
+      }
+    }
+
+    const newIds = newElements.map((e) => e.id);
+    set((s) => ({
+      elements: [...s.elements, ...newElements],
+      groups: [...s.groups, ...newGroups],
+      selectedIds: newIds,
+    }));
+  },
+
   // ----- Helpers -----
   getSelectedElements: () => {
     const s = get();

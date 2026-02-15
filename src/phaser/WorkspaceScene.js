@@ -31,12 +31,15 @@ export default class WorkspaceScene extends Phaser.Scene {
 
     // Click on empty space -> deselect
     this.input.on('pointerdown', (pointer) => {
-      // Only if clicking directly on the scene (not on a game object)
+      // Only if clicking directly on the scene (not on a game object or handle)
       const hits = this.input.hitTestPointer(pointer);
-      const realHits = hits.filter(
+      const hasElement = hits.some(
         (h) => h.getData && h.getData('elementId') && !h.getData('handleType')
       );
-      if (realHits.length === 0) {
+      const hasHandle = hits.some(
+        (h) => h.getData && h.getData('handleType')
+      );
+      if (!hasElement && !hasHandle) {
         useEditorStore.getState().clearSelection();
       }
     });

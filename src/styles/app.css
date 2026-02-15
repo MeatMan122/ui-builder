@@ -76,15 +76,39 @@
   overflow: hidden;
 }
 
+/* ===== Resize Handles ===== */
+.resize-handle {
+  flex-shrink: 0;
+  background: transparent;
+  position: relative;
+  z-index: 10;
+  transition: background 0.15s;
+}
+
+.resize-handle:hover,
+.resize-handle:active {
+  background: var(--accent);
+}
+
+.resize-handle-v {
+  width: 4px;
+  cursor: col-resize;
+}
+
+.resize-handle-h {
+  height: 4px;
+  cursor: row-resize;
+}
+
 /* ===== Left Panel: File Browser ===== */
 .panel-left {
-  width: 220px;
-  min-width: 180px;
+  min-width: 140px;
   background: var(--panel-bg);
   border-right: 1px solid var(--panel-border);
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .panel-header {
@@ -128,22 +152,22 @@
 
 /* ===== Right Panel: Properties ===== */
 .panel-right {
-  width: 260px;
-  min-width: 200px;
+  min-width: 160px;
   background: var(--panel-bg);
   border-left: 1px solid var(--panel-border);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 /* ===== Bottom Panel: Layer Panel ===== */
 .panel-bottom {
-  height: 160px;
-  min-height: 80px;
+  min-height: 60px;
   background: var(--panel-bg);
   border-top: 1px solid var(--panel-border);
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 /* ===== Property Inputs ===== */
