@@ -18,23 +18,50 @@ export default function ExportModal() {
   if (!exportOpen) return null;
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(code);
+    try {
+      await navigator.clipboard.writeText(code);
+    } catch {
+      // Fallback for older browsers or insecure contexts
+      const textarea = document.createElement('textarea');
+      textarea.value = code;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleSave = async () => {
-    try {
-      const fileHandle = await window.showSaveFilePicker({
-        suggestedName: `${componentName}.js`,
-        types: [{ description: 'JavaScript', accept: { 'text/javascript': ['.js'] } }],
-      });
-      const writable = await fileHandle.createWritable();
-      await writable.write(code);
-      await writable.close();
-    } catch (e) {
-      // user cancelled
+    if (typeof window.showSaveFilePicker === 'function') {
+      try {
+        const fileHandle = await window.showSaveFilePicker({
+          suggestedName: `${componentName}.js`,
+          types: [{ description: 'JavaScript', accept: { 'text/javascript': ['.js'] } }],
+        });
+        const writable = await fileHandle.createWritable();
+        await writable.write(code);
+        await writable.close();
+        return;
+      } catch (e) {
+        // user cancelled
+        return;
+      }
     }
+
+    // Fallback: trigger a standard download
+    const blob = new Blob([code], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${componentName}.js`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (

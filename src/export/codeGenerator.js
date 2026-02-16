@@ -7,14 +7,20 @@ export function generateCode(componentName, elements, groups) {
   const fnName = `create${safeName}`;
   const preloadName = `preload${safeName}`;
 
-  // Collect unique textures
+  // Collect unique textures — use short filename-based keys for readable output
   const textures = new Map();
+  const shortKeyByTexture = new Map();
+  const usedShortKeys = new Set();
   for (const el of elements) {
     if (!textures.has(el.textureKey)) {
-      textures.set(el.textureKey, {
-        key: el.textureKey,
-        file: el.filePath || el.fileName,
-      });
+      const fileName = basename(el.filePath || el.fileName);
+      let shortKey = sanitizeVarName(fileName);
+      if (usedShortKeys.has(shortKey)) {
+        shortKey = `${shortKey}_${usedShortKeys.size}`;
+      }
+      usedShortKeys.add(shortKey);
+      textures.set(el.textureKey, { key: shortKey, file: fileName });
+      shortKeyByTexture.set(el.textureKey, shortKey);
     }
   }
 
@@ -31,8 +37,8 @@ export function generateCode(componentName, elements, groups) {
 
   // Preload function
   lines.push(`function ${preloadName}(scene) {`);
-  for (const [key, tex] of textures) {
-    lines.push(`  scene.load.image('${key}', '${tex.file}');`);
+  for (const [, tex] of textures) {
+    lines.push(`  scene.load.image('${tex.key}', '${tex.file}');`);
   }
   lines.push('}');
   lines.push('');
@@ -61,17 +67,19 @@ export function generateCode(componentName, elements, groups) {
     const relX = el.x;
     const relY = el.y;
 
+    const texKey = shortKeyByTexture.get(el.textureKey) || el.textureKey;
+
     if (el.nineSlice) {
       const ns = el.nineSlice;
       lines.push(`  const ${uniqueVar} = scene.add.nineslice(`);
       lines.push(`    ${relX}, ${relY},`);
-      lines.push(`    '${el.textureKey}', null,`);
+      lines.push(`    '${texKey}', null,`);
       lines.push(`    ${el.w}, ${el.h},`);
       lines.push(`    ${ns.left}, ${ns.right}, ${ns.top}, ${ns.bottom}`);
       lines.push(`  );`);
       lines.push(`  ${uniqueVar}.setOrigin(0, 0);`);
     } else {
-      lines.push(`  const ${uniqueVar} = scene.add.image(${relX}, ${relY}, '${el.textureKey}');`);
+      lines.push(`  const ${uniqueVar} = scene.add.image(${relX}, ${relY}, '${texKey}');`);
       lines.push(`  ${uniqueVar}.setOrigin(0, 0);`);
       if (el.w !== el.originW || el.h !== el.originH) {
         lines.push(`  ${uniqueVar}.setDisplaySize(${el.w}, ${el.h});`);
@@ -136,6 +144,10 @@ function generateTweenCode(lines, varName, animation, indent) {
     lines.push(`${indent}  ease: '${ease}',`);
     lines.push(`${indent}});`);
   }
+}
+
+function basename(filePath) {
+  return (filePath || '').split('/').pop().split('\\').pop() || filePath;
 }
 
 function sanitizeVarName(name) {

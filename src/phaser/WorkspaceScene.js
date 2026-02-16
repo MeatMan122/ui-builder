@@ -29,8 +29,12 @@ export default class WorkspaceScene extends Phaser.Scene {
     // Checkerboard background
     this.drawBackground();
 
-    // Click on empty space -> deselect
+    const cam = this.cameras.main;
+    const canvas = this.game.canvas;
+
+    // Click on empty space -> deselect (left-click only)
     this.input.on('pointerdown', (pointer) => {
+      if (pointer.button !== 0) return;
       // Only if clicking directly on the scene (not on a game object or handle)
       const hits = this.input.hitTestPointer(pointer);
       const hasElement = hits.some(
@@ -45,7 +49,6 @@ export default class WorkspaceScene extends Phaser.Scene {
     });
 
     // Handle drop from file browser
-    const canvas = this.game.canvas;
     canvas.addEventListener('dragover', (e) => {
       e.preventDefault();
       e.dataTransfer.dropEffect = 'copy';
@@ -57,13 +60,80 @@ export default class WorkspaceScene extends Phaser.Scene {
       if (!data) return;
       const asset = JSON.parse(data);
 
-      // Calculate position relative to canvas
+      // Calculate world position accounting for camera zoom and scroll
       const rect = canvas.getBoundingClientRect();
-      const zoom = useEditorStore.getState().zoom;
-      const x = (e.clientX - rect.left) / zoom;
-      const y = (e.clientY - rect.top) / zoom;
+      const worldPt = cam.getWorldPoint(e.clientX - rect.left, e.clientY - rect.top);
+      this.addElementFromAsset(asset, worldPt.x, worldPt.y);
+    });
 
-      this.addElementFromAsset(asset, x, y);
+    // ----- Camera zoom -----
+    this._wheelZooming = false;
+
+    // Subscribe to zoom changes from toolbar -> zoom toward viewport center
+    useEditorStore.subscribe(
+      (state) => state.zoom,
+      (newZoom) => {
+        if (this._wheelZooming) return;
+        const cx = cam.worldView.centerX;
+        const cy = cam.worldView.centerY;
+        cam.setZoom(newZoom);
+        cam.centerOn(cx, cy);
+        this.selectionManager.refreshHandles();
+      }
+    );
+
+    // Mouse-wheel zoom -> zoom toward pointer
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const oldZoom = cam.zoom;
+      const factor = 1.1;
+      const newZoom = e.deltaY > 0
+        ? Math.max(0.1, oldZoom / factor)
+        : Math.min(5, oldZoom * factor);
+      if (Math.abs(newZoom - oldZoom) < 0.001) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const sx = e.clientX - rect.left;
+      const sy = e.clientY - rect.top;
+      const worldBefore = cam.getWorldPoint(sx, sy);
+
+      this._wheelZooming = true;
+      useEditorStore.getState().setZoom(newZoom);
+      cam.setZoom(newZoom);
+      this._wheelZooming = false;
+
+      const worldAfter = cam.getWorldPoint(sx, sy);
+      cam.scrollX += worldBefore.x - worldAfter.x;
+      cam.scrollY += worldBefore.y - worldAfter.y;
+
+      this.selectionManager.refreshHandles();
+    }, { passive: false });
+
+    // ----- Middle-click camera panning -----
+    this._panning = false;
+    this._panLastX = 0;
+    this._panLastY = 0;
+
+    this.input.on('pointerdown', (pointer) => {
+      if (pointer.middleButtonDown()) {
+        this._panning = true;
+        this._panLastX = pointer.event.clientX;
+        this._panLastY = pointer.event.clientY;
+      }
+    });
+
+    this.input.on('pointermove', (pointer) => {
+      if (!this._panning) return;
+      const dx = pointer.event.clientX - this._panLastX;
+      const dy = pointer.event.clientY - this._panLastY;
+      cam.scrollX -= dx / cam.zoom;
+      cam.scrollY -= dy / cam.zoom;
+      this._panLastX = pointer.event.clientX;
+      this._panLastY = pointer.event.clientY;
+    });
+
+    this.input.on('pointerup', () => {
+      this._panning = false;
     });
 
     // Listen for animation preview events

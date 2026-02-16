@@ -26,7 +26,7 @@ export default function Canvas() {
       },
       input: {
         mouse: {
-          preventDefaultWheel: false,
+          preventDefaultWheel: true,
         },
       },
       render: {

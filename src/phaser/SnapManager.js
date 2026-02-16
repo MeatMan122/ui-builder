@@ -21,7 +21,7 @@ export default class SnapManager {
       return { x: rect.x, y: rect.y };
     }
 
-    const threshold = state.snapThreshold;
+    const threshold = state.snapThreshold / state.zoom;
     const elements = state.elements.filter((e) => e.id !== dragId && e.visible !== false);
     const guides = [];
 
@@ -98,7 +98,8 @@ export default class SnapManager {
 
   drawGuides(guides) {
     this.graphics.clear();
-    this.graphics.lineStyle(1, 0xf9e2af, 0.7);
+    const zoom = useEditorStore.getState().zoom;
+    this.graphics.lineStyle(1 / zoom, 0xf9e2af, 0.7);
 
     for (const g of guides) {
       if (g.axis === 'v') {

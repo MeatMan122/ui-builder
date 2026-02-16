@@ -124,6 +124,12 @@
   justify-content: space-between;
 }
 
+.panel-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .panel-header button {
   padding: 2px 8px;
   border: 1px solid var(--input-border);
@@ -271,6 +277,68 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 80px;
+}
+
+/* ===== Folder Tree ===== */
+.folder-node {
+  user-select: none;
+}
+
+.folder-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 3px;
+  transition: background 0.12s;
+}
+
+.folder-row:hover {
+  background: rgba(137, 180, 250, 0.08);
+}
+
+.folder-chevron {
+  display: inline-block;
+  width: 14px;
+  font-size: 10px;
+  color: var(--text-dim);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.folder-chevron.open {
+  transform: rotate(90deg);
+}
+
+.folder-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.folder-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+}
+
+.folder-count {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-left: auto;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+.folder-files {
+  display: flex;
+  flex-wrap: wrap;
+  padding-top: 2px;
+  padding-bottom: 4px;
 }
 
 /* ===== Layer Panel ===== */

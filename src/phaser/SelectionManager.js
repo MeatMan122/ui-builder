@@ -1,9 +1,21 @@
 import Phaser from 'phaser';
 import useEditorStore from '../stores/editorStore';
 
-const HANDLE_SIZE = 10;
-const HANDLE_HIT_SIZE = 22;
+const HANDLE_SIZE = 8;
+const HANDLE_HIT_SIZE = 20;
 const HANDLE_COLOR = 0x89b4fa;
+
+// Outward direction per handle — biases hit area away from element interior
+const HANDLE_OUTWARD = {
+  tl: { x: -1, y: -1 },
+  tc: { x:  0, y: -1 },
+  tr: { x:  1, y: -1 },
+  ml: { x: -1, y:  0 },
+  mr: { x:  1, y:  0 },
+  bl: { x: -1, y:  1 },
+  bc: { x:  0, y:  1 },
+  br: { x:  1, y:  1 },
+};
 
 /**
  * SelectionManager: click select, multi-select, resize handles.
@@ -22,12 +34,12 @@ export default class SelectionManager {
 
   refreshHandles() {
     this.clearHandles();
-    const { selectedIds, elements } = useEditorStore.getState();
+    const { selectedIds, elements, zoom } = useEditorStore.getState();
     if (selectedIds.length === 0) return;
 
-    // Draw outline around each selected element
+    // Draw outline around each selected element (counter-scale line width for zoom)
     this.outline.clear();
-    this.outline.lineStyle(1.5, HANDLE_COLOR, 0.8);
+    this.outline.lineStyle(1.5 / zoom, HANDLE_COLOR, 0.8);
 
     for (const id of selectedIds) {
       const el = elements.find((e) => e.id === id);
@@ -39,11 +51,11 @@ export default class SelectionManager {
     if (selectedIds.length === 1) {
       const el = elements.find((e) => e.id === selectedIds[0]);
       if (!el) return;
-      this.createHandles(el);
+      this.createHandles(el, zoom);
     }
   }
 
-  createHandles(el) {
+  createHandles(el, zoom) {
     const positions = this.getHandlePositions(el);
     for (const pos of positions) {
       const handle = this.scene.add.rectangle(
@@ -53,13 +65,15 @@ export default class SelectionManager {
       );
       handle.setOrigin(0.5, 0.5);
       handle.setDepth(10001);
+      handle.setScale(1 / zoom);
+      // Bias the hit area outward so it doesn't overlap the element interior
+      const outwardBias = (HANDLE_HIT_SIZE - HANDLE_SIZE) / 2;
+      const dir = HANDLE_OUTWARD[pos.type];
+      const hitX = (HANDLE_SIZE - HANDLE_HIT_SIZE) / 2 + dir.x * outwardBias;
+      const hitY = (HANDLE_SIZE - HANDLE_HIT_SIZE) / 2 + dir.y * outwardBias;
+
       handle.setInteractive(
-        new Phaser.Geom.Rectangle(
-          (HANDLE_SIZE - HANDLE_HIT_SIZE) / 2,
-          (HANDLE_SIZE - HANDLE_HIT_SIZE) / 2,
-          HANDLE_HIT_SIZE,
-          HANDLE_HIT_SIZE
-        ),
+        new Phaser.Geom.Rectangle(hitX, hitY, HANDLE_HIT_SIZE, HANDLE_HIT_SIZE),
         Phaser.Geom.Rectangle.Contains,
         { draggable: true, cursor: pos.cursor }
       );
@@ -163,9 +177,10 @@ export default class SelectionManager {
       }
     }
 
-    // Update outline
+    // Update outline (counter-scale line width for zoom)
+    const zoom = useEditorStore.getState().zoom;
     this.outline.clear();
-    this.outline.lineStyle(1.5, HANDLE_COLOR, 0.8);
+    this.outline.lineStyle(1.5 / zoom, HANDLE_COLOR, 0.8);
     this.outline.strokeRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
 
     // Update handle positions
