@@ -4,6 +4,7 @@ import FileBrowser from './components/FileBrowser';
 import Canvas from './components/Canvas';
 import PropertiesPanel from './components/PropertiesPanel';
 import LayerPanel from './components/LayerPanel';
+import HotkeyGuide from './components/HotkeyGuide';
 import ExportModal from './components/ExportModal';
 import useEditorStore from './stores/editorStore';
 
@@ -31,6 +32,9 @@ export default function App() {
       } else if (mod && e.key === 'v') {
         e.preventDefault();
         useEditorStore.getState().pasteClipboard();
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        useEditorStore.getState().deleteSelection();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -105,7 +109,12 @@ export default function App() {
         onMouseDown={(e) => startDrag('bottom', e)}
       />
       <div className="panel-bottom" style={{ height: bottomHeight }}>
-        <LayerPanel />
+        <div className="panel-bottom-inner">
+          <div className="panel-bottom-layers">
+            <LayerPanel />
+          </div>
+          <HotkeyGuide />
+        </div>
       </div>
       <ExportModal />
     </div>

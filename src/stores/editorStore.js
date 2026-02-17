@@ -154,6 +154,24 @@ const useEditorStore = create(subscribeWithSelector((set, get) => ({
     }));
   },
 
+  deleteSelection: () => {
+    const { selectedIds, elements, groups } = get();
+    if (selectedIds.length === 0) return;
+    const remaining = elements.filter((e) => !selectedIds.includes(e.id));
+    const remainingIds = new Set(remaining.map((e) => e.id));
+    const updatedGroups = groups
+      .map((g) => ({ ...g, children: g.children.filter((cid) => remainingIds.has(cid)) }))
+      .filter((g) => g.children.length > 0);
+    const liveGroupIds = new Set(updatedGroups.map((g) => g.id));
+    set({
+      elements: remaining.map((e) =>
+        e.groupId && !liveGroupIds.has(e.groupId) ? { ...e, groupId: null } : e
+      ),
+      groups: updatedGroups,
+      selectedIds: [],
+    });
+  },
+
   // ----- Helpers -----
   getSelectedElements: () => {
     const s = get();

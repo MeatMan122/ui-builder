@@ -167,13 +167,67 @@
   flex-shrink: 0;
 }
 
-/* ===== Bottom Panel: Layer Panel ===== */
+/* ===== Bottom Panel: Layer Panel + Hotkey Guide ===== */
 .panel-bottom {
   min-height: 60px;
   background: var(--panel-bg);
   border-top: 1px solid var(--panel-border);
-  overflow-y: auto;
+  overflow: hidden;
   flex-shrink: 0;
+}
+
+.panel-bottom-inner {
+  display: flex;
+  height: 100%;
+}
+
+.panel-bottom-layers {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* ===== Hotkey Guide ===== */
+.hotkey-guide {
+  width: 200px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--panel-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.hotkey-list {
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hotkey-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.hotkey-kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  border: 1px solid var(--input-border);
+  border-radius: 3px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 10px;
+  white-space: nowrap;
+  min-width: 68px;
+  text-align: center;
+}
+
+.hotkey-action {
+  color: var(--text-dim);
+  white-space: nowrap;
 }
 
 /* ===== Property Inputs ===== */
@@ -520,12 +574,14 @@
 
 /* ===== Scrollbar for panels ===== */
 .panel-right::-webkit-scrollbar,
-.panel-bottom::-webkit-scrollbar {
+.panel-bottom-layers::-webkit-scrollbar,
+.hotkey-guide::-webkit-scrollbar {
   width: 6px;
 }
 
 .panel-right::-webkit-scrollbar-thumb,
-.panel-bottom::-webkit-scrollbar-thumb {
+.panel-bottom-layers::-webkit-scrollbar-thumb,
+.hotkey-guide::-webkit-scrollbar-thumb {
   background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
