@@ -31,6 +31,10 @@ export default function Toolbar() {
     <div className="toolbar">
       <span style={{ fontWeight: 600, fontSize: 13 }}>Phaser UI Builder</span>
       <div className="separator" />
+      <button onClick={() => window.dispatchEvent(new CustomEvent('add-text-element'))}>
+        + Text
+      </button>
+      <div className="separator" />
       <button onClick={handleGroup} disabled={selectedIds.length < 2}>
         Group
       </button>

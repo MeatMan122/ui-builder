@@ -62,69 +62,80 @@ export default class PhaserBridge {
     for (const el of elements) {
       let go = this.gameObjects.get(el.id);
 
-      if (!go) {
-        // Need to create -- but only if texture is loaded
-        if (!scene.textures.exists(el.textureKey)) continue;
-
-        if (el.nineSlice) {
-          go = scene.add.nineslice(
-            el.x, el.y,
-            el.textureKey, null,
-            el.w, el.h,
-            el.nineSlice.left, el.nineSlice.right,
-            el.nineSlice.top, el.nineSlice.bottom
-          );
+      if (el.type === 'text') {
+        // ----- Text element -----
+        if (!go) {
+          go = this._createTextObject(el);
+        } else if (go.type !== 'Text') {
+          const depth = go.depth;
+          go.destroy();
+          go = this._createTextObject(el);
+          go.setDepth(depth);
         } else {
-          go = scene.add.image(el.x, el.y, el.textureKey);
-          go.setDisplaySize(el.w, el.h);
+          this._updateTextObject(go, el);
         }
-        go.setOrigin(0, 0);
-        go.setData('elementId', el.id);
-        go.setInteractive({ draggable: true });
-        this.gameObjects.set(el.id, go);
-        scene.setupDragForGameObject(go);
       } else {
-        // Check if need to swap between image and nineslice
-        const isNineSlice = go.type === 'NineSlice';
-        if (el.nineSlice && !isNineSlice) {
-          // Swap image -> nineslice
-          const depth = go.depth;
-          go.destroy();
-          go = scene.add.nineslice(
-            el.x, el.y,
-            el.textureKey, null,
-            el.w, el.h,
-            el.nineSlice.left, el.nineSlice.right,
-            el.nineSlice.top, el.nineSlice.bottom
-          );
+        // ----- Image / NineSlice element -----
+        if (!go) {
+          if (!scene.textures.exists(el.textureKey)) continue;
+
+          if (el.nineSlice) {
+            go = scene.add.nineslice(
+              el.x, el.y,
+              el.textureKey, null,
+              el.w, el.h,
+              el.nineSlice.left, el.nineSlice.right,
+              el.nineSlice.top, el.nineSlice.bottom
+            );
+          } else {
+            go = scene.add.image(el.x, el.y, el.textureKey);
+            go.setDisplaySize(el.w, el.h);
+          }
           go.setOrigin(0, 0);
           go.setData('elementId', el.id);
-          go.setDepth(depth);
-          go.setInteractive({ draggable: true });
-          this.gameObjects.set(el.id, go);
-          scene.setupDragForGameObject(go);
-        } else if (!el.nineSlice && isNineSlice) {
-          // Swap nineslice -> image
-          const depth = go.depth;
-          go.destroy();
-          go = scene.add.image(el.x, el.y, el.textureKey);
-          go.setOrigin(0, 0);
-          go.setDisplaySize(el.w, el.h);
-          go.setData('elementId', el.id);
-          go.setDepth(depth);
           go.setInteractive({ draggable: true });
           this.gameObjects.set(el.id, go);
           scene.setupDragForGameObject(go);
         } else {
-          // Update existing object
-          go.setPosition(el.x, el.y);
-          if (isNineSlice) {
-            go.setSize(el.w, el.h);
-          } else {
+          const isNineSlice = go.type === 'NineSlice';
+          if (el.nineSlice && !isNineSlice) {
+            const depth = go.depth;
+            go.destroy();
+            go = scene.add.nineslice(
+              el.x, el.y,
+              el.textureKey, null,
+              el.w, el.h,
+              el.nineSlice.left, el.nineSlice.right,
+              el.nineSlice.top, el.nineSlice.bottom
+            );
+            go.setOrigin(0, 0);
+            go.setData('elementId', el.id);
+            go.setDepth(depth);
+            go.setInteractive({ draggable: true });
+            this.gameObjects.set(el.id, go);
+            scene.setupDragForGameObject(go);
+          } else if (!el.nineSlice && isNineSlice) {
+            const depth = go.depth;
+            go.destroy();
+            go = scene.add.image(el.x, el.y, el.textureKey);
+            go.setOrigin(0, 0);
             go.setDisplaySize(el.w, el.h);
+            go.setData('elementId', el.id);
+            go.setDepth(depth);
+            go.setInteractive({ draggable: true });
+            this.gameObjects.set(el.id, go);
+            scene.setupDragForGameObject(go);
+          } else {
+            go.setPosition(el.x, el.y);
+            if (isNineSlice) {
+              go.setSize(el.w, el.h);
+            } else {
+              go.setDisplaySize(el.w, el.h);
+            }
           }
         }
       }
+
       go.setAngle(el.rotation || 0);
       go.setVisible(el.visible !== false);
     }
@@ -149,6 +160,65 @@ export default class PhaserBridge {
     if (go) {
       go.destroy();
       this.gameObjects.delete(id);
+    }
+  }
+
+  _buildTextStyle(el) {
+    const style = {
+      fontFamily: el.fontFamily || 'Arial',
+      fontSize: `${el.fontSize || 24}px`,
+      color: el.color || '#ffffff',
+      align: el.align || 'left',
+    };
+    if (el.fontStyle) style.fontStyle = el.fontStyle;
+    if (el.stroke && el.strokeThickness > 0) {
+      style.stroke = el.stroke;
+      style.strokeThickness = el.strokeThickness;
+    }
+    if (el.wordWrapWidth > 0) {
+      style.wordWrap = { width: el.wordWrapWidth, useAdvancedWrap: true };
+    }
+    if (el.lineSpacing) style.lineSpacing = el.lineSpacing;
+    if (el.letterSpacing) style.letterSpacing = el.letterSpacing;
+    if (el.padding > 0) {
+      const p = el.padding;
+      style.padding = { left: p, right: p, top: p, bottom: p };
+    }
+    return style;
+  }
+
+  _createTextObject(el) {
+    const scene = this.scene;
+    const style = this._buildTextStyle(el);
+    const go = scene.add.text(el.x, el.y, el.text || '', style);
+    go.setOrigin(0, 0);
+    go.setData('elementId', el.id);
+    go.setInteractive({ draggable: true, useHandCursor: false });
+    this.gameObjects.set(el.id, go);
+    scene.setupDragForGameObject(go);
+
+    // Store measured size back so selection handles and snap work
+    this._syncTextSize(el.id, go);
+    return go;
+  }
+
+  _updateTextObject(go, el) {
+    go.setPosition(el.x, el.y);
+    go.setText(el.text || '');
+    go.setStyle(this._buildTextStyle(el));
+
+    this._syncTextSize(el.id, go);
+  }
+
+  _syncTextSize(id, go) {
+    const w = Math.ceil(go.width);
+    const h = Math.ceil(go.height);
+    const store = useEditorStore.getState();
+    const el = store.elements.find((e) => e.id === id);
+    if (el && (el.w !== w || el.h !== h)) {
+      this._syncing = true;
+      store.updateElement(id, { w, h });
+      this._syncing = false;
     }
   }
 }

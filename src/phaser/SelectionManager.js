@@ -170,7 +170,9 @@ export default class SelectionManager {
     const go = bridge.getGameObject(start.id);
     if (go) {
       go.setPosition(Math.round(x), Math.round(y));
-      if (go.type === 'NineSlice') {
+      if (go.type === 'Text') {
+        // Text size is driven by content/style; resize not applicable
+      } else if (go.type === 'NineSlice') {
         go.setSize(Math.round(w), Math.round(h));
       } else {
         go.setDisplaySize(Math.round(w), Math.round(h));

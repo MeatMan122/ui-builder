@@ -12,6 +12,7 @@ export function generateCode(componentName, elements, groups) {
   const shortKeyByTexture = new Map();
   const usedShortKeys = new Set();
   for (const el of elements) {
+    if (el.type === 'text') continue;
     if (!textures.has(el.textureKey)) {
       const fileName = basename(el.filePath || el.fileName);
       let shortKey = sanitizeVarName(fileName);
@@ -63,14 +64,39 @@ export function generateCode(componentName, elements, groups) {
     const uniqueVar = varName;
     varIdx++;
 
-    // Calculate position relative to container (offset from first element)
     const relX = el.x;
     const relY = el.y;
 
-    const texKey = shortKeyByTexture.get(el.textureKey) || el.textureKey;
+    if (el.type === 'text') {
+      // Build style object inline
+      const styleParts = [];
+      styleParts.push(`fontFamily: '${el.fontFamily || 'Arial'}'`);
+      styleParts.push(`fontSize: '${el.fontSize || 24}px'`);
+      if (el.fontStyle) styleParts.push(`fontStyle: '${el.fontStyle}'`);
+      styleParts.push(`color: '${el.color || '#ffffff'}'`);
+      if (el.align && el.align !== 'left') styleParts.push(`align: '${el.align}'`);
+      if (el.wordWrapWidth > 0) styleParts.push(`wordWrap: { width: ${el.wordWrapWidth}, useAdvancedWrap: true }`);
+      if (el.stroke && el.strokeThickness > 0) {
+        styleParts.push(`stroke: '${el.stroke}'`);
+        styleParts.push(`strokeThickness: ${el.strokeThickness}`);
+      }
+      if (el.lineSpacing) styleParts.push(`lineSpacing: ${el.lineSpacing}`);
+      if (el.letterSpacing) styleParts.push(`letterSpacing: ${el.letterSpacing}`);
+      if (el.padding > 0) {
+        const p = el.padding;
+        styleParts.push(`padding: { left: ${p}, right: ${p}, top: ${p}, bottom: ${p} }`);
+      }
 
-    if (el.nineSlice) {
+      const escapedText = (el.text || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n');
+      lines.push(`  const ${uniqueVar} = scene.add.text(${relX}, ${relY}, '${escapedText}', {`);
+      for (let si = 0; si < styleParts.length; si++) {
+        lines.push(`    ${styleParts[si]},`);
+      }
+      lines.push(`  });`);
+      lines.push(`  ${uniqueVar}.setOrigin(0, 0);`);
+    } else if (el.nineSlice) {
       const ns = el.nineSlice;
+      const texKey = shortKeyByTexture.get(el.textureKey) || el.textureKey;
       lines.push(`  const ${uniqueVar} = scene.add.nineslice(`);
       lines.push(`    ${relX}, ${relY},`);
       lines.push(`    '${texKey}', null,`);
@@ -79,6 +105,7 @@ export function generateCode(componentName, elements, groups) {
       lines.push(`  );`);
       lines.push(`  ${uniqueVar}.setOrigin(0, 0);`);
     } else {
+      const texKey = shortKeyByTexture.get(el.textureKey) || el.textureKey;
       lines.push(`  const ${uniqueVar} = scene.add.image(${relX}, ${relY}, '${texKey}');`);
       lines.push(`  ${uniqueVar}.setOrigin(0, 0);`);
       if (el.w !== el.originW || el.h !== el.originH) {

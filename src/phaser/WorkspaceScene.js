@@ -141,6 +141,11 @@ export default class WorkspaceScene extends Phaser.Scene {
       this.previewAnimation(e.detail.elementId);
     });
 
+    // Listen for "add text" events from the toolbar
+    window.addEventListener('add-text-element', () => {
+      this.addTextAtCenter();
+    });
+
     // Sync any elements already in store
     this.bridge.syncFromStore(useEditorStore.getState().elements);
   }
@@ -208,6 +213,14 @@ export default class WorkspaceScene extends Phaser.Scene {
 
     // Bridge will create the game object via subscription
     // but subscription may not fire synchronously, so force sync
+    this.bridge.syncFromStore(useEditorStore.getState().elements);
+  }
+
+  addTextAtCenter() {
+    const cam = this.cameras.main;
+    const cx = cam.worldView.centerX;
+    const cy = cam.worldView.centerY;
+    useEditorStore.getState().addTextElement(cx, cy);
     this.bridge.syncFromStore(useEditorStore.getState().elements);
   }
 

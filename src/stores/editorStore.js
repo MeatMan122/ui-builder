@@ -8,15 +8,54 @@ export const genGroupId = () => `grp_${++_idCounter}_${Date.now().toString(36)}`
 const useEditorStore = create(subscribeWithSelector((set, get) => ({
   // ----- Elements on canvas -----
   elements: [],
-  // { id, textureKey, fileName, filePath, objectUrl, x, y, w, h, originW, originH,
-  //   rotation, scaleX, scaleY,
+  // Image element: { id, type: 'image', textureKey, fileName, filePath, objectUrl,
+  //   x, y, w, h, originW, originH, rotation, scaleX, scaleY,
   //   nineSlice: null | { left, right, top, bottom },
   //   animation: null | { type, trigger, config },
   //   interactive: false, interactionTrigger: 'hover',
   //   groupId: null, visible: true, name: '' }
+  //
+  // Text element: { id, type: 'text', x, y, w, h, rotation,
+  //   text, fontFamily, fontSize, fontStyle, color, align,
+  //   wordWrapWidth, stroke, strokeThickness,
+  //   lineSpacing, letterSpacing, padding,
+  //   animation, interactive, interactionTrigger,
+  //   groupId, visible, name }
 
   addElement: (el) =>
-    set((s) => ({ elements: [...s.elements, { id: genId(), visible: true, ...el }] })),
+    set((s) => ({ elements: [...s.elements, { id: genId(), type: 'image', visible: true, ...el }] })),
+
+  addTextElement: (x, y) =>
+    set((s) => ({
+      elements: [...s.elements, {
+        id: genId(),
+        type: 'text',
+        x: Math.round(x),
+        y: Math.round(y),
+        w: 0,
+        h: 0,
+        rotation: 0,
+        text: 'Text',
+        fontFamily: 'Arial',
+        fontSize: 24,
+        fontStyle: '',
+        color: '#ffffff',
+        align: 'left',
+        wordWrapWidth: 0,
+        stroke: '#000000',
+        strokeThickness: 0,
+        lineSpacing: 0,
+        letterSpacing: 0,
+        padding: 0,
+        nineSlice: null,
+        animation: null,
+        interactive: false,
+        interactionTrigger: 'hover',
+        groupId: null,
+        visible: true,
+        name: 'Text',
+      }],
+    })),
 
   updateElement: (id, patch) =>
     set((s) => ({
