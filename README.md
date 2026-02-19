@@ -31,7 +31,7 @@ A visual drag-and-drop editor for building [Phaser 3](https://phaser.io/) UI com
 ### Installation
 
 ```bash
-git clone https://github.com/<your-username>/ui-helper.git
+git clone https://github.com/MeatMan122/ui-builder.git
 cd ui-helper
 npm install
 ```
