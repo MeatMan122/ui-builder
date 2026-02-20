@@ -23,6 +23,9 @@ A visual drag-and-drop editor for building [Phaser 3](https://phaser.io/) UI com
 
 ## Getting Started
 
+### Try it here
+[Phaser UI Builder](https://ui-builder-xi.vercel.app/)
+
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (v18 or later recommended)
