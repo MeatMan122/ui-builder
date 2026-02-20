@@ -308,6 +308,35 @@
   accent-color: var(--accent);
 }
 
+/* ===== Rotation presets ===== */
+.prop-row-unit {
+  font-size: 11px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  width: 10px;
+}
+
+.rotation-presets {
+  gap: 4px;
+}
+
+.rotation-presets button {
+  flex: 1;
+  padding: 3px 6px;
+  border: 1px solid var(--input-border);
+  border-radius: 3px;
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.rotation-presets button:hover {
+  border-color: var(--accent);
+  background: var(--panel-border);
+}
+
 /* ===== Text property textarea & color picker ===== */
 .prop-textarea {
   flex: 1;

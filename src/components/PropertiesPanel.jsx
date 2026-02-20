@@ -51,6 +51,12 @@ export default function PropertiesPanel() {
         <div className="prop-row">
           <label>Rot</label>
           <input type="number" value={Math.round(el.rotation || 0)} onChange={(e) => setNum('rotation', e)} step="1" />
+          <span className="prop-row-unit">°</span>
+        </div>
+        <div className="prop-row rotation-presets">
+          <button onClick={() => set('rotation', (((el.rotation || 0) - 90) % 360 + 360) % 360)}>↺ 90°</button>
+          <button onClick={() => set('rotation', ((el.rotation || 0) + 90) % 360)}>↻ 90°</button>
+          <button onClick={() => set('rotation', 0)}>Reset</button>
         </div>
       </div>
 

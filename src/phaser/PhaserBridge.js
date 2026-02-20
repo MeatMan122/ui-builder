@@ -21,6 +21,7 @@ export default class PhaserBridge {
       (elements) => {
         if (this._syncing) return;
         this.syncFromStore(elements);
+        this.scene.selectionManager?.refreshHandles();
       },
       { equalityFn: Object.is }
     );
